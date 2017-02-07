@@ -149,3 +149,26 @@ echo $?
 ```
 \##This code check that the clean\_snp\_position.txt file has already sorted based on the first column
 
+**4. join the data** clean\_snp\_position.txt **respectly with** clean\_transposed\_maize\_genotypes\_sorted.txt  and clean\_transposed\_teosinte\_genotypes\_sorted.txt** **based on the common column SNP_ID.**
+
+```
+join -t $'\t' -1 1 -2 1 clean_snp_position.txt clean_transposed_teosinte_genotypes_sorted.txt > teosinte_genotypes_joined.txt
+```
+
+```
+join -t $'\t' -1 1 -2 1 clean_snp_position.txt clean_transposed_maize_genotypes_sorted.txt > maize_genotypes_joined.txt
+```
+
+Also inspect the files to make sure the joined files are correct
+
+```
+head maize_genotypes_joined.txt
+```
+
+```
+awk -F "\t" '{print NF; exit}' maize_genotypes_joined.txt
+```
+
+```
+wc -l maize_genotypes_joined.txt
+```
