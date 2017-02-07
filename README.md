@@ -40,11 +40,22 @@ awk -F "\t" '{print NF; exit}' fang_et_al_genotypes.txt snp_position.txt
  head snp_position.txt
 ```
 
-
-
 - From the above two line code I could see that those two files containing different number of column headers and the no common column for join.
 - Determined that there is need to transpose the data before join the files.
 
+**3.check the number of lines within each group in file** fang\_et\_al\_genotypes.txt
 
-	
+- This is accomplished using the following code	
+
+```
+ cut -f 3 fang_et_al_genotypes.txt | uniq -c
+```
+
+By doing this I know how many lines with each group, and this will make it easier to check 
+the extracted files.
+
+
+
+
+
 
