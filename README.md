@@ -172,3 +172,32 @@ awk -F "\t" '{print NF; exit}' maize_genotypes_joined.txt
 ```
 wc -l maize_genotypes_joined.txt
 ```
+
+##Subset and sort data for each chromosome for each group
+**1. For the maize group**
+
+- **The following line of code was used to subset and sort data for each chromosome accordingly. Here I only paste the code for chromsome1 and chromosome2. To do the process for other chromosme, just need to change the number accordingly.**
+
+```
+awk '$2==1' maize_genotypes_joined.txt | sort -k3,3n | tee maize_chr1.txt | sed 's/?/-/g' | sort -k3,3nr > maize_chr1_rev.txt
+``` 
+
+For the above code: 1. before the first pipe, it is trying to match by column. When the second column equals 1 it send the output to the second program; 2. It sort the output from first program based on the third column (chromosome_position increasing order), and then send the output to the third program; 3. Create a intermediate file which contains the chromosome1 information and has been sorted based on chromosome_position increasing order; 4. Replace the "?" with "-" from the output of second program and then send it to the fourth program; 5, Sort the output from third program based on chromosme_position decreasing order and then write the output to file named maize\_chr1\_rev.txt.
+
+**2. For the teosinte group**
+
+```
+awk '$2==1' teosinte_genotypes_joined.txt | sort -k3,3n | tee teosinte_chr1.txt | sed 's/?/-/g' | sort -k3,3nr > teosinte_chr1_rev.txt
+
+```
+
+**3. Inspect the subsetted files**
+
+```
+wc -l *_chr*.txt
+```
+
+```
+du -h *_chr*.txt
+```
+
