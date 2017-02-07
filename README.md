@@ -4,7 +4,7 @@
 ----------
  
 
-##Inspecting data  
+##Inspect data  
 
 
 
@@ -54,7 +54,7 @@ awk -F "\t" '{print NF; exit}' fang_et_al_genotypes.txt snp_position.txt
 By doing this I know how many lines with each group, and this will make it easier to check 
 the extracted files.
 
-##Subsetting data
+##Subset data
 **1.Before transposing the data, I need to subset the data for the maize group and the teosinte group. And both of those two files need to have the header from file** fang\_et\_al\_genotypes.txt
 
 - **Following code were used to accomplish this part**
@@ -107,4 +107,45 @@ awk -f transpose.awk teosinte_genotypes.txt > transposed_teosinte_genotypes.txt
 ```
 wc -l transposed_maize_genotypes.txt transposed_teosinte_genotypes.txt
 ```
+
+##Sort and join data
+
+**1.Next I remove the first three lines of file** transposed\_maize\_genotypes.txt  and transposed\_teosinte\_genotypes.txt. **As they will cause problem for data sorting and they are not necessary for data joining.**
+
+```
+tail -n +4 transposed_maize_genotypes.txt > clean_transposed_maize_genotypes.txt
+```
+
+```
+tail -n +4 transposed_teosinte_genotypes.txt > clean_transposed_teosinte_genotypes.txt
+```
+
+**2. Then I extract the first, third and fourth column of** snp\_position.txt **file. They are respectly for SNP_ID, Chromosome and position**
+
+```
+cut -f1,3,4 snp_position.txt | tail -n +2 > clean_snp_position.txt
+```
+
+I also inspect the extracted files make sure it is correct
+
+```
+wc -l clean_snp_position.txt
+```
+
+**3. After this, I sort the files** clean\_transposed\_maize\_genotypes.txt, clean\_transposed\_teosinte\_genotypes.txt and clean\_snp\_position.txt **based on the first column SNP_ID.**
+
+```
+sort -k1,1 clean_transposed_maize_genotypes.txt > clean_transposed_maize_genotypes_sorted.txt
+```
+
+```
+sort -k1,1 clean_transposed_teosinte_genotypes.txt > clean_transposed_teosinte_genotypes_sorted.txt
+```
+
+```
+sort -c -k1,1 clean_snp_position.txt
+echo $?
+0
+```
+\##This code check that the clean\_snp\_position.txt file has already sorted based on the first column
 
