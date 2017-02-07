@@ -90,6 +90,21 @@ awk -F "\t" '{print NF; exit}'  maize_genotypes.txt
 ```
 awk -F "\t" '{print NF; exit}' teosinte_genotypes.txt
 ```
+##Transpose data
 
+**1.Next I need to transpose the data so that the SNP\_ID could be in one column and can be used as a common column to join two files**
 
+```
+awk -f transpose.awk maize_genotypes.txt > transposed_maize_genotypes.txt
+```
+
+```
+awk -f transpose.awk teosinte_genotypes.txt > transposed_teosinte_genotypes.txt
+```
+
+**2. Then I inspected rows of those two transposed files to make sure it is transposed correctly**
+
+```
+wc -l transposed_maize_genotypes.txt transposed_teosinte_genotypes.txt
+```
 
