@@ -10,7 +10,7 @@
 
 
 
-**1.Using the following code to inspect the size, row number and column number of both of the files**
+**1.Using the following code to inspect the size, row number and column number for both of the files**
 
 ```
  du -h fang_et_al_genotypes.txt snp_position.txt
@@ -27,8 +27,8 @@ awk -F "\t" '{print NF; exit}' fang_et_al_genotypes.txt snp_position.txt
 **From the above code:**
 
 
-- **fang\_et\_al\_genotypes.txt** (size 11M, #rows 2783, #columns 986)
-- **snp\_position.txt** (size 84k, #rows 984, #columns 986)
+- **fang\_et\_al\_genotypes.txt** (size 11M, #row 2783, #column 986)
+- **snp\_position.txt** (size 84k, #row 984, #column 986)
  
 **2.Inspect both of the files to check the header and determine based on which column/filed to join those two files**
 
@@ -41,7 +41,7 @@ awk -F "\t" '{print NF; exit}' fang_et_al_genotypes.txt snp_position.txt
 ```
 
 - From the above two line code I could see that those two files containing different number of column headers and the no common column for join.
-- Determined that there is need to transpose the data before join the files.
+- Determined that I need to transpose the data before join the files.
 
 **3.check the number of lines within each group in file** fang\_et\_al\_genotypes.txt
 
@@ -52,7 +52,7 @@ awk -F "\t" '{print NF; exit}' fang_et_al_genotypes.txt snp_position.txt
 ```
 
 By doing this I know how many lines with each group, and this will make it easier to check 
-the extracted files.
+the extracted files in next step.
 
 ##Subset data
 **1.Before transposing the data, I need to subset the data for the maize group and the teosinte group. And both of those two files need to have the header from file** fang\_et\_al\_genotypes.txt
@@ -64,6 +64,8 @@ head -n 1 fang_et_al_genotypes.txt > maize_genotypes.txt
 ```
 
 \##this line of code write the **header line** to the file **maize\_genotypes.txt**,so that after we transpose the file, we can have the **SNP\_ID** in the file.
+
+- **Next I subset the data for the maize group and the teosinte group**
 
 ```
 grep -E "(ZMMIL|ZMMLR|ZMMMR)" fang_et_al_genotypes.txt >> maize_genotypes.txt
@@ -77,7 +79,7 @@ head -n 1 fang_et_al_genotypes.txt > teosinte_genotypes.txt
 grep -E "(ZMPBA|ZMPIL|ZMPJA)" fang_et_al_genotypes.txt >> teosinte_genotypes.txt
 ```
 
-**2.Then I count the number of rows and columns in the new file to see whether it match the expected number of lines within each group (maize:1573, teosinte:975)**
+**2.Then I count the number of rows and columns in the new files to see whether they match the expected number of lines within each group (maize:1573, teosinte:975)**
 
 ```
 wc -l maize_genotypes.txt  teosinte_genotypes.txt
@@ -120,7 +122,7 @@ tail -n +4 transposed_maize_genotypes.txt > clean_transposed_maize_genotypes.txt
 tail -n +4 transposed_teosinte_genotypes.txt > clean_transposed_teosinte_genotypes.txt
 ```
 
-**2. Then I extract the first, third and fourth column of** snp\_position.txt **file. They are respectly for SNP_ID, Chromosome and position**
+**2. Then I extract the first, third and fourth column of** snp\_position.txt **file. They are respectly for SNP_ID, Chromosome and Position**
 
 ```
 cut -f1,3,4 snp_position.txt | tail -n +2 > clean_snp_position.txt
@@ -191,7 +193,7 @@ awk '$2==1' teosinte_genotypes_joined.txt | sed 's/-/?/g'| sort -k3,3n | tee teo
 
 ```
 
-**3. Inspect the subsetted files to make sure they are correct and also check the file size for each of them**
+**3. Inspect the subset files to make sure they are correct and also check the file size for each of them**
 
 ```
 wc -l *_chr*.txt
@@ -201,3 +203,70 @@ wc -l *_chr*.txt
 du -h *_chr*.txt
 ```
 
+##Add the header line to the subset files
+**1. create the header line for the maize group subset files and the teosinte subset files**
+
+```
+head -n 1 transposed_maize_genotypes.txt | cut -f2-1574 > maize_file_sample_header.txt
+```
+\##cut the corresponding columns from the transposed\_maize\_genotypes.txt to get only the sample_ID and write it to file maize\_file\_sample\_header.txt
+
+```
+head -n 1 transposed_teosinte_genotypes.txt | cut -f2-976 > teosinte_file_sample_header.txt
+```
+
+```
+head -n 1 snp_position.txt | cut -f1,3,4  > snp_file_header.txt
+```
+\##cut the corresponding columns from the snp\_position.txt to get the column head of SNP_ID, Chromosome, Position and write it to file snp\_file\_header.txt
+
+```
+paste snp_file_header.txt maize_file_sample_header.txt > maize_file_header.txt
+```
+
+```
+paste snp_file_header.txt teosinte_file_sample_header.txt > teosinte_file_header.txt
+```
+
+
+**2. Inspect the created header files and make sure they are correct**
+
+```
+awk -F "\t" '{print NF; exit}' maize_file_header.txt
+```
+
+```
+awk -F "\t" '{print NF; exit}' teosinte_file_header.txt
+```
+
+**3. cat the subset files with the header files with for loop**
+
+```
+for ((i=1; i<=10; i+=1)); do cat maize_file_header.txt  "maize_chr"$i".txt" > "maize_genotypes_chr"$i".txt"; done
+```
+
+```
+for ((i=1; i<=10; i+=1)); do cat maize_file_header.txt  "maize_chr"$i"_rev.txt" > "maize_genotypes_chr"$i"_rev.txt"; done
+```
+
+```
+ for ((i=1; i<=10; i+=1)); do cat teosinte_file_header.txt  "teosinte_chr"$i".txt" > "teosinte_genotypes_chr"$i".txt"; done
+```
+
+```
+for ((i=1; i<=10; i+=1)); do cat teosinte_file_header.txt  "teosinte_chr"$i"_rev.txt" > "teosinte_genotypes_chr"$i"_rev.txt"; done
+```
+
+**4. Inspect the new created files and make sure they are correct**
+
+```
+wc -l *_genotypes_chr*.txt 
+```
+
+```
+awk -F "\t" '{print NF; exit}' maize_genotypes_chr1.txt
+```
+
+```
+awk -F "\t" '{print NF; exit}' teosinte_genotypes_chr1.txt
+```
