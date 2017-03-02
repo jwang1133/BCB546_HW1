@@ -216,6 +216,7 @@ library(dplyr)
 ```{r}
 ##Format the data before plottting, using the melt() in reshape2 to reshape the original data
 ##reload the data 
+setwd("C:/Users/jinyuw/Desktop/BCB546_class/BCB546_HW1")
 fangs <- as.data.frame(read.table ("fang_et_al_genotypes.txt", sep = "\t", header = T))
 snps <- as.data.frame(read.table ("snp_position.txt", header = T, sep = "\t"))
 str(snps)
@@ -366,6 +367,74 @@ rm(list=setdiff(ls(), c("fangs","snps")))
 
 
 ```
+###plot3, I want to look at the percentage of homozygote snp types distribution across each of the  chromosome
+
+```{r}
+str(snps)
+fang1 <- fangs[, -2]
+dim(fang1)
+fang1[1:5, 1:5]
+
+fang_m <- melt(fang1, id = c("Sample_ID", "Group"))
+#head(fang_m)
+colnames(fang_m)[c(3,4)] <- c("SNP_ID", "Allele")
+##Get the snp_f file and format it for data joining 
+snp_f <- snps[, c(1,3,4)]
+dim(snp_f)
+snp_f[snp_f == "unknown"] <- NA
+snp_f[snp_f == "multiple"] <- NA
+snp_f$Chromosome <- as.numeric(as.character(snp_f$Chromosome))
+snp_f$Position <- as.numeric(as.character(snp_f$Position))
+snp_f[1:10, 1:3]
+##now we can merge the snp_f and the fang_m by SNP_ID
+fs_m <- merge(snp_f, fang_m, by ="SNP_ID")
+dim(fs_m)
+#head(fs_m)
+fs_m <- na.omit(fs_m)
+
+##next I will subset the data and get only the columns that I needed
+fs_m1 <- fs_m[fs_m$Allele == "A/A" |  fs_m$Allele == "C/C"|fs_m$Allele == "T/T" | fs_m$Allele == "G/G", c(2, 6)]
+#head(fs_m1)
+dim(fs_m1)
+class(fs_m1$Chromosome)
+fs_m1$Chromosome <- as.character(fs_m1$Chromosome)
+
+##next I will count the number of each type of homozygous snps on each chromosome
+
+fs_m2 <- fs_m1 %>% arrange(Chromosome, Allele) %>% group_by(Chromosome, Allele) %>% summarize (n = n())
+#head(fs_m2)
+
+##next I need to get the total number of each type of homozygous snps on each chrosome, so next step I can calculate the percentage for ##each of them
+
+fs_m3 <- fs_m1 %>% group_by(Chromosome) %>% summarize (Total = n())
+#head(fs_m3)
+
+##next merge the two data set
+
+fs_m4 <- merge(fs_m2 , fs_m3, by = "Chromosome")
+#(fs_m4)
+fs_m4$Percent <- fs_m4$n/fs_m4$Total
+dim(fs_m4)
+#head(fs_m4)
+
+##then plot the figure for visualization the percentage of each type of homozygous genotype for each chromosome
+
+ggplot(data = fs_m4, aes(x = Chromosome, y = Percent,colour = Allele)) + 
+  geom_point()  
+
+
+ggplot(data =fs_m4,aes(x = Allele, y = Percent, fill = Allele)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  facet_wrap(~ Chromosome,  scales = "free_y",nrow = 5, ncol = 2 ) + theme_bw() +theme(axis.text.x = element_blank(),axis.ticks.x = element_blank())
+
+
+```
+
+
+
+
+
+
 
 
 
