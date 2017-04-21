@@ -1,0 +1,91 @@
+---
+title: "BCB546X-HW4-Genomic Ranges"
+author: "Jinyu Wang"
+date: "April 18, 2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+Loading the packages required for this assignment
+
+```{r}
+library(GenomicRanges)
+library(GenomicFeatures)
+
+```
+
+Loading the mouse TranscriptDb object so we can extract and collapse all overlapping exons later.
+```{r}
+library(TxDb.Mmusculus.UCSC.mm10.ensGene)
+txdb <- TxDb.Mmusculus.UCSC.mm10.ensGene
+```
+
+First, need to user rtracklayer to load in BED file of dbSNP(build 137) variants (SNPs, indels, etc...) from chr1 of Mus musculus:
+```{r}
+library(rtracklayer)
+dbsnp137 <- import("mm10_snp137_chr1_trunc.bed.gz")
+```
+
+We want to find all variants within exons on this mouse chromosome. So let's first collapse all overlapping exons in the mouse TranscriptDb (txdb) object created earlier and create an object containing only exons with reduce(). And  then we subset to get exons from chromosome1 as our variants are only from chrosome1:
+
+```{r}
+collapsed_exons <- reduce(exons(txdb), ignore.strand=TRUE)
+chr1_collapsed_exons <- collapsed_exons[seqnames(collapsed_exons) == "chr1"]
+head(chr1_collapsed_exons)
+```
+
+Before extracting variants in exons, first we want to inspect our variant file dbsnp137 :
+
+```{r}
+summary(width(dbsnp137))
+```
+From the above output we can see that the majority of variants are 1 nucleotide long which are either SNPs or 1 basepair insertion/deletions. we could also see there are some variants with zero widths. In most cases these correspond to inderstions into the reference genome.
+
+If a variant has a width of 0, we cannot find its overlap with exon ranges, so we must adjust its width to do this. To count these zero-width features too, we'll resize using the resize function.
+```{r}
+dbsnp137_resized <- dbsnp137
+zw_i <- width(dbsnp137_resized) == 0
+dbsnp137_resized[zw_i] <- resize(dbsnp137_resized[zw_i], width=1)
+
+```
+Now we can find out how many varaints overlap our chromosome 1 exons regions. And we use findOverlaps() to create a Hits object, also we tell findverlaps() to ignore strand:
+
+```{r}
+hits <- findOverlaps(dbsnp137_resized, chr1_collapsed_exons, 
+        ignore.strand=TRUE)
+hits
+```
+
+
+And then we can determine the number of variants and the proportion of variants that are exonic by using the following code:
+
+```{r}
+length(unique(queryHits(hits)))
+length(unique(queryHits(hits)))/length(dbsnp137_resized)
+
+```
+we can see this represent about 2% of the variants on chromosome1
+
+We can also use the countOverlaps() function to find the number of variants that overlap each exon region(note we have to reverse the order of the query since we're finding values per exon now)
+
+```{r}
+var_counts <- countOverlaps(chr1_collapsed_exons, dbsnp137_resized, ignore.strand=TRUE)
+head(var_counts)
+```
+
+Then in order to make these easier to follow, we can append this to our chromosome1 exonic regions GRanges object as a metadata column:
+
+```{r}
+chr1_collapsed_exons$num_vars <- var_counts
+head(chr1_collapsed_exons)
+```
+
+Write the output about chromosom1 exonic regions GRanges object with the number of column iindicating the number of variants per exon appended.
+
+```{r}
+write.csv(chr1_collapsed_exons, file = "chr1_collapsed_exons.csv")
+
+```
+
+
